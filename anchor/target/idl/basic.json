@@ -1,5 +1,5 @@
 {
-  "address": "JAVuBXeBZqXNtS73azhBDAoYaaAFfo4gWXoZe2e7Jf8H",
+  "address": "4Fxm3VkmLo76zuuvuAZYJhtWygDD427zwMpwnMGHHJA4",
   "metadata": {
     "name": "basic",
     "version": "0.1.0",
@@ -8,10 +8,890 @@
   },
   "instructions": [
     {
-      "name": "greet",
-      "discriminator": [203, 194, 3, 150, 228, 58, 181, 62],
-      "accounts": [],
+      "name": "deactivate_feed",
+      "discriminator": [
+        182,
+        149,
+        189,
+        108,
+        44,
+        58,
+        204,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "oracle_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "data_feed",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  97,
+                  116,
+                  97,
+                  95,
+                  102,
+                  101,
+                  101,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "data_feed.feed_id",
+                "account": "DataFeed"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
       "args": []
+    },
+    {
+      "name": "initialize_oracle",
+      "discriminator": [
+        144,
+        223,
+        131,
+        120,
+        196,
+        253,
+        181,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "oracle_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "reactivate_feed",
+      "discriminator": [
+        89,
+        232,
+        198,
+        92,
+        18,
+        23,
+        121,
+        19
+      ],
+      "accounts": [
+        {
+          "name": "oracle_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "data_feed",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  97,
+                  116,
+                  97,
+                  95,
+                  102,
+                  101,
+                  101,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "data_feed.feed_id",
+                "account": "DataFeed"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "register_data_feed",
+      "discriminator": [
+        254,
+        169,
+        19,
+        250,
+        229,
+        155,
+        181,
+        154
+      ],
+      "accounts": [
+        {
+          "name": "oracle_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "data_feed",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  97,
+                  116,
+                  97,
+                  95,
+                  102,
+                  101,
+                  101,
+                  100
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "feed_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "feed_id",
+          "type": "string"
+        },
+        {
+          "name": "feed_type",
+          "type": {
+            "defined": {
+              "name": "FeedType"
+            }
+          }
+        },
+        {
+          "name": "description",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "set_oracle_paused",
+      "discriminator": [
+        61,
+        243,
+        64,
+        36,
+        121,
+        38,
+        141,
+        241
+      ],
+      "accounts": [
+        {
+          "name": "oracle_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "transfer_update_authority",
+      "discriminator": [
+        234,
+        251,
+        113,
+        101,
+        78,
+        104,
+        207,
+        42
+      ],
+      "accounts": [
+        {
+          "name": "oracle_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_authority",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "update_data_feed",
+      "discriminator": [
+        99,
+        73,
+        97,
+        201,
+        176,
+        61,
+        116,
+        139
+      ],
+      "accounts": [
+        {
+          "name": "oracle_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  111,
+                  114,
+                  97,
+                  99,
+                  108,
+                  101,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "data_feed",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  97,
+                  116,
+                  97,
+                  95,
+                  102,
+                  101,
+                  101,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "data_feed.feed_id",
+                "account": "DataFeed"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "value",
+          "type": "i128"
+        },
+        {
+          "name": "value_str",
+          "type": "string"
+        },
+        {
+          "name": "source",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "DataFeed",
+      "discriminator": [
+        146,
+        11,
+        109,
+        236,
+        192,
+        89,
+        172,
+        164
+      ]
+    },
+    {
+      "name": "OracleConfig",
+      "discriminator": [
+        133,
+        196,
+        152,
+        50,
+        27,
+        21,
+        145,
+        254
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "DataFeedDeactivated",
+      "discriminator": [
+        221,
+        162,
+        189,
+        136,
+        162,
+        179,
+        187,
+        16
+      ]
+    },
+    {
+      "name": "DataFeedReactivated",
+      "discriminator": [
+        204,
+        86,
+        116,
+        33,
+        210,
+        155,
+        48,
+        129
+      ]
+    },
+    {
+      "name": "DataFeedRegistered",
+      "discriminator": [
+        108,
+        218,
+        228,
+        121,
+        163,
+        68,
+        48,
+        138
+      ]
+    },
+    {
+      "name": "DataFeedUpdated",
+      "discriminator": [
+        78,
+        85,
+        252,
+        246,
+        87,
+        123,
+        170,
+        54
+      ]
+    },
+    {
+      "name": "OracleInitalized",
+      "discriminator": [
+        158,
+        11,
+        215,
+        76,
+        51,
+        161,
+        209,
+        205
+      ]
+    },
+    {
+      "name": "OraclePauseToggled",
+      "discriminator": [
+        75,
+        169,
+        119,
+        212,
+        242,
+        216,
+        255,
+        126
+      ]
+    },
+    {
+      "name": "UpdateAuthorityTransferred",
+      "discriminator": [
+        129,
+        26,
+        231,
+        44,
+        217,
+        3,
+        56,
+        221
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "Unauthorized",
+      "msg": "Unauthorized access"
+    },
+    {
+      "code": 6001,
+      "name": "OraclePaused",
+      "msg": "Oracle is paused"
+    },
+    {
+      "code": 6002,
+      "name": "FeedInactive",
+      "msg": "Feed is inactive"
+    },
+    {
+      "code": 6003,
+      "name": "FeedIdTooLong",
+      "msg": "Feed ID too long (max 32 chars)"
+    },
+    {
+      "code": 6004,
+      "name": "DescriptionTooLong",
+      "msg": "Description too long (max 128 chars)"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidFeedType",
+      "msg": "Invalid feed type"
+    }
+  ],
+  "types": [
+    {
+      "name": "DataFeed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feed_id",
+            "type": "string"
+          },
+          {
+            "name": "feed_type",
+            "type": {
+              "defined": {
+                "name": "FeedType"
+              }
+            }
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "latest_value",
+            "type": "i128"
+          },
+          {
+            "name": "latest_value_str",
+            "type": "string"
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "last_updated",
+            "type": "i64"
+          },
+          {
+            "name": "update_count",
+            "type": "u64"
+          },
+          {
+            "name": "is_active",
+            "type": "bool"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DataFeedDeactivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feed_id",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DataFeedReactivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feed_id",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DataFeedRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feed_id",
+            "type": "string"
+          },
+          {
+            "name": "feed_type",
+            "type": {
+              "defined": {
+                "name": "FeedType"
+              }
+            }
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DataFeedUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "feed_id",
+            "type": "string"
+          },
+          {
+            "name": "previous_value",
+            "type": "i128"
+          },
+          {
+            "name": "new_value",
+            "type": "i128"
+          },
+          {
+            "name": "value_str",
+            "type": "string"
+          },
+          {
+            "name": "source",
+            "type": "string"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "update_count",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FeedType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "CryptoPrice"
+          },
+          {
+            "name": "Weather"
+          },
+          {
+            "name": "ExchangeRate"
+          },
+          {
+            "name": "RandomNumber"
+          },
+          {
+            "name": "Custom"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "update_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_feeds",
+            "type": "u64"
+          },
+          {
+            "name": "is_paused",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OracleInitalized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OraclePauseToggled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpdateAuthorityTransferred",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "old_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
     }
   ]
 }
