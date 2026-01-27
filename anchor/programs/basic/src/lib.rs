@@ -45,6 +45,20 @@ pub mod sentiment_oracle {
         require!(!config.is_paused, OracleError::Paused);
         require!(amount >= config.min_stake, OracleError::InsufficientStake);
 
+        let transfer_ix = anchor_lang::solana_program::system_instruction::transfer(
+            &ctx.accounts.authority.key(),
+            &ctx.accounts.vault.key(),
+            amount,
+        );
+        anchor_lang::solana_program::program::invoke(
+            &transfer_ix,
+            &[
+                ctx.accounts.authority.to_account_info(),
+                ctx.accounts.vault.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+        )?;
+
         let analyst = &mut ctx.accounts.analyst;
         analyst.stake_amount = analyst.stake_amount.checked_add(amount).unwrap();
 
@@ -52,6 +66,35 @@ pub mod sentiment_oracle {
             analyst: analyst.authority,
             amount,
             total_stake: analyst.stake_amount,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        Ok(())
+    }
+
+    pub fn unstake_tokens(ctx: Context<UnstakeTokens>, amount: u64) -> Result<()> {
+        let config = &ctx.accounts.config;
+        require!(!config.is_paused, OracleError::Paused);
+        let analyst = &mut ctx.accounts.analyst;
+        require!(
+            analyst.stake_amount >= amount,
+            OracleError::InsufficientStake
+        );
+
+        let remaining = analyst.stake_amount.checked_sub(amount).unwrap();
+        require!(
+            remaining == 0 || remaining >= config.min_stake,
+            OracleError::InsufficientStake
+        );
+        let vault = &ctx.accounts.vault;
+        let authority = &ctx.accounts.authority;
+
+        **vault.to_account_info().try_borrow_mut_lamports()? -= amount;
+        **authority.to_account_info().try_borrow_mut_lamports()? += amount;
+        analyst.stake_amount = remaining;
+        emit!(StakeWithdrawn {
+            analyst: analyst.authority,
+            amount,
+            remaining_stake: analyst.stake_amount,
             timestamp: Clock::get()?.unix_timestamp,
         });
         Ok(())
@@ -415,6 +458,40 @@ pub struct StakeTokens<'info> {
         bump = analyst.bump
     )]
     pub analyst: Account<'info, Analyst>,
+
+    /// CHECK: Vault PDA to hold staked SOL
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
+    #[account(mut)]
+    pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct UnstakeTokens<'info> {
+    #[account(
+        seeds = [b"config"],
+        bump = config.bump
+    )]
+    pub config: Account<'info, OracleConfig>,
+    #[account(
+        mut,
+        seeds = [b"analyst", authority.key().as_ref()],
+        bump = analyst.bump
+    )]
+    pub analyst: Account<'info, Analyst>,
+    /// CHECK: Vault PDA that holds staked SOL
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
+    #[account(mut)]
     pub authority: Signer<'info>,
 }
 
@@ -563,6 +640,14 @@ pub struct StakeDeposited {
     pub analyst: Pubkey,
     pub amount: u64,
     pub total_stake: u64,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct StakeWithdrawn {
+    pub analyst: Pubkey,
+    pub amount: u64,
+    pub remaining_stake: u64,
     pub timestamp: i64,
 }
 
