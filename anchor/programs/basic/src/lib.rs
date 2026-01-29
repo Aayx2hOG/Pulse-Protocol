@@ -322,6 +322,70 @@ pub mod sentiment_oracle {
         Ok(())
     }
 
+    pub fn claim_winnings(ctx: Context<ClaimWinnings>) -> Result<()> {
+        let prediction = &ctx.accounts.prediction;
+        let bet = &mut ctx.accounts.bet;
+
+        require!(!bet.claimed, OracleError::AlreadyClaimed);
+        require!(
+            prediction.outcome != PredictionOutcome::Pending,
+            OracleError::PredictionNotResolved
+        );
+
+        let won = match prediction.outcome {
+            PredictionOutcome::Yes => bet.position == true,
+            PredictionOutcome::No => bet.position == false,
+            PredictionOutcome::Invalid => true, // refund on invalid
+            _ => false,
+        };
+
+        if won {
+            let payout = if prediction.outcome == PredictionOutcome::Invalid {
+                // Refund original amount
+                bet.amount
+            } else {
+                // Calculate winnings: (bet_amount / winning_pool) * total_pool
+                let total_pool = prediction
+                    .yes_stake
+                    .checked_add(prediction.no_stake)
+                    .unwrap();
+                let winning_pool = if bet.position {
+                    prediction.yes_stake
+                } else {
+                    prediction.no_stake
+                };
+
+                if winning_pool == 0 {
+                    bet.amount
+                } else {
+                    (bet.amount as u128)
+                        .checked_mul(total_pool as u128)
+                        .unwrap()
+                        .checked_div(winning_pool as u128)
+                        .unwrap() as u64
+                }
+            };
+
+            // Transfer from vault to bettor
+            let vault = &ctx.accounts.vault;
+            let bettor = &ctx.accounts.bettor;
+
+            **vault.to_account_info().try_borrow_mut_lamports()? -= payout;
+            **bettor.to_account_info().try_borrow_mut_lamports()? += payout;
+
+            emit!(WinningsClaimed {
+                prediction_id: prediction.prediction_id.clone(),
+                bettor: bet.bettor,
+                payout,
+                won,
+                timestamp: Clock::get()?.unix_timestamp,
+            });
+        }
+
+        bet.claimed = true;
+        Ok(())
+    }
+
     pub fn resolve_prediction(
         ctx: Context<ResolvePrediction>,
         actual_value: i64,
@@ -652,6 +716,32 @@ pub struct PlaceBet<'info> {
 }
 
 #[derive(Accounts)]
+pub struct ClaimWinnings<'info> {
+    #[account(
+        seeds = [b"prediction", prediction.prediction_id.as_bytes()],
+        bump = prediction.bump
+    )]
+    pub prediction: Account<'info, Prediction>,
+    #[account(
+        mut,
+        seeds = [b"bet", prediction.prediction_id.as_bytes(), bettor.key().as_ref()],
+        bump = bet.bump,
+        constraint = bet.bettor == bettor.key() @ OracleError::Unauthorized
+    )]
+    pub bet: Account<'info, Bet>,
+    #[account(mut)]
+    pub bettor: Signer<'info>,
+    /// CHECK: Vault PDA
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct ResolvePrediction<'info> {
     #[account(seeds = [b"config"], bump = config.bump)]
     pub config: Account<'info, OracleConfig>,
@@ -786,6 +876,15 @@ pub struct ReputationUpdated {
     pub timestamp: i64,
 }
 
+#[event]
+pub struct WinningsClaimed {
+    pub prediction_id: String,
+    pub bettor: Pubkey,
+    pub payout: u64,
+    pub won: bool,
+    pub timestamp: i64,
+}
+
 #[error_code]
 pub enum OracleError {
     #[msg("Unauthorized")]
@@ -822,4 +921,8 @@ pub enum OracleError {
     InvalidDeadline,
     #[msg("Oracle is paused")]
     OraclePaused,
+    #[msg("Bet already claimed")]
+    AlreadyClaimed,
+    #[msg("Prediction not yet resolved")]
+    PredictionNotResolved,
 }

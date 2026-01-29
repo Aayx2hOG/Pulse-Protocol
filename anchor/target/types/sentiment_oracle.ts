@@ -14,6 +14,101 @@ export type SentimentOracle = {
   },
   "instructions": [
     {
+      "name": "claimWinnings",
+      "discriminator": [
+        161,
+        215,
+        24,
+        59,
+        14,
+        236,
+        242,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "prediction",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  101,
+                  100,
+                  105,
+                  99,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "prediction.prediction_id",
+                "account": "prediction"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "prediction.prediction_id",
+                "account": "prediction"
+              },
+              {
+                "kind": "account",
+                "path": "bettor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "bettor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "createPrediction",
       "discriminator": [
         186,
@@ -1055,6 +1150,19 @@ export type SentimentOracle = {
         174,
         79
       ]
+    },
+    {
+      "name": "winningsClaimed",
+      "discriminator": [
+        187,
+        184,
+        29,
+        196,
+        54,
+        117,
+        70,
+        150
+      ]
     }
   ],
   "errors": [
@@ -1142,6 +1250,16 @@ export type SentimentOracle = {
       "code": 6016,
       "name": "oraclePaused",
       "msg": "Oracle is paused"
+    },
+    {
+      "code": 6017,
+      "name": "alreadyClaimed",
+      "msg": "Bet already claimed"
+    },
+    {
+      "code": 6018,
+      "name": "predictionNotResolved",
+      "msg": "Prediction not yet resolved"
     }
   ],
   "types": [
@@ -1680,6 +1798,34 @@ export type SentimentOracle = {
           },
           {
             "name": "neutral"
+          }
+        ]
+      }
+    },
+    {
+      "name": "winningsClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "predictionId",
+            "type": "string"
+          },
+          {
+            "name": "bettor",
+            "type": "pubkey"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "won",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
