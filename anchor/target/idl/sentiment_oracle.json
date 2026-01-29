@@ -214,6 +214,24 @@
           }
         },
         {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "admin",
           "writable": true,
           "signer": true
@@ -283,6 +301,24 @@
       ],
       "accounts": [
         {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "prediction",
           "writable": true,
           "pda": {
@@ -311,9 +347,56 @@
           }
         },
         {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "prediction.prediction_id",
+                "account": "Prediction"
+              },
+              {
+                "kind": "account",
+                "path": "bettor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "bettor",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -823,6 +906,19 @@
       ]
     },
     {
+      "name": "Bet",
+      "discriminator": [
+        147,
+        23,
+        35,
+        59,
+        15,
+        75,
+        155,
+        32
+      ]
+    },
+    {
       "name": "OracleConfig",
       "discriminator": [
         133,
@@ -1035,6 +1131,11 @@
       "code": 6015,
       "name": "InvalidDeadline",
       "msg": "Invalid deadline"
+    },
+    {
+      "code": 6016,
+      "name": "OraclePaused",
+      "msg": "Oracle is paused"
     }
   ],
   "types": [
@@ -1113,6 +1214,42 @@
       }
     },
     {
+      "name": "Bet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bettor",
+            "type": "pubkey"
+          },
+          {
+            "name": "prediction",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "position",
+            "type": "bool"
+          },
+          {
+            "name": "placed_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "BetPlaced",
       "type": {
         "kind": "struct",
@@ -1171,6 +1308,10 @@
           },
           {
             "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bump",
             "type": "u8"
           }
         ]

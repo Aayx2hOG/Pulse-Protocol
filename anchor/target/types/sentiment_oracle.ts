@@ -220,6 +220,24 @@ export type SentimentOracle = {
           }
         },
         {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "admin",
           "writable": true,
           "signer": true
@@ -289,6 +307,24 @@ export type SentimentOracle = {
       ],
       "accounts": [
         {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "prediction",
           "writable": true,
           "pda": {
@@ -317,9 +353,56 @@ export type SentimentOracle = {
           }
         },
         {
+          "name": "bet",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  101,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "prediction.prediction_id",
+                "account": "prediction"
+              },
+              {
+                "kind": "account",
+                "path": "bettor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              }
+            ]
+          }
+        },
+        {
           "name": "bettor",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
@@ -829,6 +912,19 @@ export type SentimentOracle = {
       ]
     },
     {
+      "name": "bet",
+      "discriminator": [
+        147,
+        23,
+        35,
+        59,
+        15,
+        75,
+        155,
+        32
+      ]
+    },
+    {
       "name": "oracleConfig",
       "discriminator": [
         133,
@@ -1041,6 +1137,11 @@ export type SentimentOracle = {
       "code": 6015,
       "name": "invalidDeadline",
       "msg": "Invalid deadline"
+    },
+    {
+      "code": 6016,
+      "name": "oraclePaused",
+      "msg": "Oracle is paused"
     }
   ],
   "types": [
@@ -1119,6 +1220,42 @@ export type SentimentOracle = {
       }
     },
     {
+      "name": "bet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bettor",
+            "type": "pubkey"
+          },
+          {
+            "name": "prediction",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "position",
+            "type": "bool"
+          },
+          {
+            "name": "placedAt",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
       "name": "betPlaced",
       "type": {
         "kind": "struct",
@@ -1177,6 +1314,10 @@ export type SentimentOracle = {
           },
           {
             "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vaultBump",
             "type": "u8"
           }
         ]

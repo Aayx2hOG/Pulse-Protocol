@@ -21,16 +21,16 @@ describe('Sentiment Oracle', () => {
 
   before(async () => {
     ;[configPda] = PublicKey.findProgramAddressSync([Buffer.from('config')], program.programId)
-    ;[analystPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('analyst'), admin.publicKey.toBuffer()],
-      program.programId,
-    )
-    ;[feedPda] = PublicKey.findProgramAddressSync([Buffer.from('feed'), Buffer.from(feedAssetId)], program.programId)
-    ;[predictionPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from('prediction'), Buffer.from(predictionId)],
-      program.programId,
-    )
-    ;[vaultPda] = PublicKey.findProgramAddressSync([Buffer.from('vault')], program.programId)
+      ;[analystPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from('analyst'), admin.publicKey.toBuffer()],
+        program.programId,
+      )
+      ;[feedPda] = PublicKey.findProgramAddressSync([Buffer.from('feed'), Buffer.from(feedAssetId)], program.programId)
+      ;[predictionPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from('prediction'), Buffer.from(predictionId)],
+        program.programId,
+      )
+      ;[vaultPda] = PublicKey.findProgramAddressSync([Buffer.from('vault')], program.programId)
   })
 
   describe('Initialize', () => {

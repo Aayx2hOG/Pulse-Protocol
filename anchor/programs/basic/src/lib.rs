@@ -4,6 +4,8 @@ declare_id!("4Fxm3VkmLo76zuuvuAZYJhtWygDD427zwMpwnMGHHJA4");
 
 #[program]
 pub mod sentiment_oracle {
+    use anchor_lang::solana_program::{program::invoke, system_instruction::transfer};
+
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
@@ -15,6 +17,23 @@ pub mod sentiment_oracle {
         config.min_stake = 100_000_000;
         config.is_paused = false;
         config.bump = ctx.bumps.config;
+
+        let rent = Rent::get()?;
+        let vault_rent = rent.minimum_balance(0);
+
+        let transfer_ix = transfer(
+            &ctx.accounts.admin.key(),
+            &ctx.accounts.vault.key(),
+            vault_rent,
+        );
+        invoke(
+            &transfer_ix,
+            &[
+                ctx.accounts.admin.to_account_info(),
+                ctx.accounts.vault.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+        )?;
         Ok(())
     }
 
@@ -244,15 +263,47 @@ pub mod sentiment_oracle {
     }
 
     pub fn place_bet(ctx: Context<PlaceBet>, amount: u64, position: bool) -> Result<()> {
+        let config = &ctx.accounts.config;
+        require!(!config.is_paused, OracleError::OraclePaused);
+
+        // Get prediction key before mutable borrow
+        let prediction_key = ctx.accounts.prediction.key();
+        let prediction_id = ctx.accounts.prediction.prediction_id.clone();
+
         let prediction = &mut ctx.accounts.prediction;
         require!(
             prediction.outcome == PredictionOutcome::Pending,
             OracleError::PredictionResolved
         );
+
+        let clock = Clock::get()?;
         require!(
-            Clock::get()?.unix_timestamp < prediction.deadline,
+            clock.unix_timestamp < prediction.deadline,
             OracleError::DeadlinePassed
         );
+
+        let transfer_ix = transfer(
+            &ctx.accounts.bettor.key(),
+            &ctx.accounts.vault.key(),
+            amount,
+        );
+        invoke(
+            &transfer_ix,
+            &[
+                ctx.accounts.bettor.to_account_info(),
+                ctx.accounts.vault.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+        )?;
+
+        let bet = &mut ctx.accounts.bet;
+        bet.amount = amount;
+        bet.position = position;
+        bet.bettor = ctx.accounts.bettor.key();
+        bet.prediction = prediction_key;
+        bet.claimed = false;
+        bet.placed_at = clock.unix_timestamp;
+        bet.bump = ctx.bumps.bet;
 
         if position {
             prediction.yes_stake = prediction.yes_stake.checked_add(amount).unwrap();
@@ -262,11 +313,11 @@ pub mod sentiment_oracle {
         prediction.total_participants = prediction.total_participants.checked_add(1).unwrap();
 
         emit!(BetPlaced {
-            prediction_id: prediction.prediction_id.clone(),
+            prediction_id,
             bettor: ctx.accounts.bettor.key(),
             amount,
             position,
-            timestamp: Clock::get()?.unix_timestamp,
+            timestamp: clock.unix_timestamp,
         });
         Ok(())
     }
@@ -359,6 +410,19 @@ pub struct OracleConfig {
     pub min_stake: u64,
     pub is_paused: bool,
     pub bump: u8,
+    pub vault_bump: u8,
+}
+
+#[account]
+#[derive(InitSpace)]
+pub struct Bet {
+    pub bettor: Pubkey,
+    pub prediction: Pubkey,
+    pub amount: u64,
+    pub position: bool,
+    pub placed_at: i64,
+    pub bump: u8,
+    pub claimed: bool,
 }
 
 #[account]
@@ -427,6 +491,13 @@ pub struct Initialize<'info> {
         bump
     )]
     pub config: Account<'info, OracleConfig>,
+    /// CHECK: Vault PDA to hold staked SOL - initialized with rent
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
     #[account(mut)]
     pub admin: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -552,14 +623,32 @@ pub struct CreatePrediction<'info> {
 
 #[derive(Accounts)]
 pub struct PlaceBet<'info> {
+    #[account(seeds = [b"config"], bump = config.bump)]
+    pub config: Account<'info, OracleConfig>,
     #[account(
         mut,
         seeds = [b"prediction", prediction.prediction_id.as_bytes()],
         bump = prediction.bump
     )]
     pub prediction: Account<'info, Prediction>,
+    #[account(
+        init,
+        payer = bettor,
+        space = 8 + Bet::INIT_SPACE,
+        seeds = [b"bet", prediction.prediction_id.as_bytes(), bettor.key().as_ref()],
+        bump
+    )]
+    pub bet: Account<'info, Bet>,
+    /// CHECK: Vault PDA
+    #[account(
+        mut,
+        seeds = [b"vault"],
+        bump
+    )]
+    pub vault: AccountInfo<'info>,
     #[account(mut)]
     pub bettor: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
@@ -731,4 +820,6 @@ pub enum OracleError {
     DeadlineNotReached,
     #[msg("Invalid deadline")]
     InvalidDeadline,
+    #[msg("Oracle is paused")]
+    OraclePaused,
 }
