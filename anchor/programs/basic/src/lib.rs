@@ -18,6 +18,7 @@ pub mod sentiment_oracle {
         config.total_feeds = 0;
         config.total_predictions = 0;
         config.min_stake = 100_000_000;
+        config.submission_cooldown = 60; // 60 seconds cooldown
         config.is_paused = false;
         config.bump = ctx.bumps.config;
 
@@ -187,10 +188,16 @@ pub mod sentiment_oracle {
             OracleError::InsufficientStake
         );
 
+        // Rate limiting check
+        let clock = Clock::get()?;
+        require!(
+            clock.unix_timestamp >= analyst.last_submission + config.submission_cooldown as i64,
+            OracleError::CooldownNotElapsed
+        );
+
         let feed = &mut ctx.accounts.sentiment_feed;
         require!(feed.is_active, OracleError::FeedInactive);
 
-        let clock = Clock::get()?;
         let old_score = feed.sentiment_score;
 
         let weight = analyst.reputation_score as u128;
@@ -225,6 +232,7 @@ pub mod sentiment_oracle {
         };
 
         analyst.total_predictions = analyst.total_predictions.checked_add(1).unwrap();
+        analyst.last_submission = clock.unix_timestamp;
 
         emit!(SentimentSubmitted {
             feed: feed.asset_id.clone(),
@@ -504,6 +512,7 @@ pub struct OracleConfig {
     pub total_feeds: u64,
     pub total_predictions: u64,
     pub min_stake: u64,
+    pub submission_cooldown: u64, // Cooldown in seconds between submissions
     pub is_paused: bool,
     pub bump: u8,
     pub vault_bump: u8,
@@ -533,6 +542,7 @@ pub struct Analyst {
     pub total_predictions: u64,
     pub correct_predictions: u64,
     pub stake_amount: u64,
+    pub last_submission: i64, // Timestamp of last submission for rate limiting
     pub is_active: bool,
     pub registered_at: i64,
     pub bump: u8,
@@ -958,4 +968,6 @@ pub enum OracleError {
     AlreadyClaimed,
     #[msg("Prediction not yet resolved")]
     PredictionNotResolved,
+    #[msg("Cooldown period not elapsed")]
+    CooldownNotElapsed,
 }

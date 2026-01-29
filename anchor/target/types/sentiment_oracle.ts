@@ -1264,6 +1264,11 @@ export type SentimentOracle = {
       "code": 6018,
       "name": "predictionNotResolved",
       "msg": "Prediction not yet resolved"
+    },
+    {
+      "code": 6019,
+      "name": "cooldownNotElapsed",
+      "msg": "Cooldown period not elapsed"
     }
   ],
   "types": [
@@ -1299,6 +1304,10 @@ export type SentimentOracle = {
           {
             "name": "stakeAmount",
             "type": "u64"
+          },
+          {
+            "name": "lastSubmission",
+            "type": "i64"
           },
           {
             "name": "isActive",
@@ -1428,6 +1437,10 @@ export type SentimentOracle = {
           },
           {
             "name": "minStake",
+            "type": "u64"
+          },
+          {
+            "name": "submissionCooldown",
             "type": "u64"
           },
           {

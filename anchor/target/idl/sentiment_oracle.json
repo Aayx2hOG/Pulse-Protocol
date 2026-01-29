@@ -1258,6 +1258,11 @@
       "code": 6018,
       "name": "PredictionNotResolved",
       "msg": "Prediction not yet resolved"
+    },
+    {
+      "code": 6019,
+      "name": "CooldownNotElapsed",
+      "msg": "Cooldown period not elapsed"
     }
   ],
   "types": [
@@ -1293,6 +1298,10 @@
           {
             "name": "stake_amount",
             "type": "u64"
+          },
+          {
+            "name": "last_submission",
+            "type": "i64"
           },
           {
             "name": "is_active",
@@ -1422,6 +1431,10 @@
           },
           {
             "name": "min_stake",
+            "type": "u64"
+          },
+          {
+            "name": "submission_cooldown",
             "type": "u64"
           },
           {
