@@ -914,6 +914,10 @@ export type SentimentOracle = {
           "name": "authority",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [

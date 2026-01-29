@@ -4,7 +4,10 @@ declare_id!("4Fxm3VkmLo76zuuvuAZYJhtWygDD427zwMpwnMGHHJA4");
 
 #[program]
 pub mod sentiment_oracle {
-    use anchor_lang::solana_program::{program::invoke, system_instruction::transfer};
+    use anchor_lang::solana_program::{
+        program::{invoke, invoke_signed},
+        system_instruction::transfer,
+    };
 
     use super::*;
 
@@ -104,11 +107,27 @@ pub mod sentiment_oracle {
             remaining == 0 || remaining >= config.min_stake,
             OracleError::InsufficientStake
         );
-        let vault = &ctx.accounts.vault;
-        let authority = &ctx.accounts.authority;
 
-        **vault.to_account_info().try_borrow_mut_lamports()? -= amount;
-        **authority.to_account_info().try_borrow_mut_lamports()? += amount;
+        // Transfer from vault to authority using invoke_signed
+        let vault_bump = ctx.bumps.vault;
+        let seeds = &[b"vault".as_ref(), &[vault_bump]];
+        let signer_seeds = &[&seeds[..]];
+
+        let transfer_ix = transfer(
+            &ctx.accounts.vault.key(),
+            &ctx.accounts.authority.key(),
+            amount,
+        );
+        invoke_signed(
+            &transfer_ix,
+            &[
+                ctx.accounts.vault.to_account_info(),
+                ctx.accounts.authority.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            signer_seeds,
+        )?;
+
         analyst.stake_amount = remaining;
         emit!(StakeWithdrawn {
             analyst: analyst.authority,
@@ -366,12 +385,25 @@ pub mod sentiment_oracle {
                 }
             };
 
-            // Transfer from vault to bettor
-            let vault = &ctx.accounts.vault;
-            let bettor = &ctx.accounts.bettor;
+            // Transfer from vault to bettor using invoke_signed
+            let vault_bump = ctx.bumps.vault;
+            let seeds = &[b"vault".as_ref(), &[vault_bump]];
+            let signer_seeds = &[&seeds[..]];
 
-            **vault.to_account_info().try_borrow_mut_lamports()? -= payout;
-            **bettor.to_account_info().try_borrow_mut_lamports()? += payout;
+            let transfer_ix = transfer(
+                &ctx.accounts.vault.key(),
+                &ctx.accounts.bettor.key(),
+                payout,
+            );
+            invoke_signed(
+                &transfer_ix,
+                &[
+                    ctx.accounts.vault.to_account_info(),
+                    ctx.accounts.bettor.to_account_info(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
+                signer_seeds,
+            )?;
 
             emit!(WinningsClaimed {
                 prediction_id: prediction.prediction_id.clone(),
@@ -628,6 +660,7 @@ pub struct UnstakeTokens<'info> {
     pub vault: AccountInfo<'info>,
     #[account(mut)]
     pub authority: Signer<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
