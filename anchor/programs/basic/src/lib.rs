@@ -349,6 +349,52 @@ pub mod sentiment_oracle {
         Ok(())
     }
 
+    pub fn update_min_stake(ctx: Context<AdminAction>, new_min_stake: u64) -> Result<()> {
+        emit!(ConfigUpdated {
+            field: "min_stake".to_string(),
+            old_val: ctx.accounts.config.min_stake.to_string(),
+            new_val: new_min_stake.to_string(),
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        ctx.accounts.config.min_stake = new_min_stake;
+        Ok(())
+    }
+
+    pub fn update_cooldown(ctx: Context<AdminAction>, new_cooldown: u64) -> Result<()> {
+        emit!(ConfigUpdated {
+            field: "submission_cooldown".to_string(),
+            old_val: ctx.accounts.config.submission_cooldown.to_string(),
+            new_val: new_cooldown.to_string(),
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        ctx.accounts.config.submission_cooldown = new_cooldown;
+        Ok(())
+    }
+
+    pub fn update_treasury(ctx: Context<AdminAction>, new_treasury: Pubkey) -> Result<()> {
+        let old_treasury = ctx.accounts.config.treasury;
+        ctx.accounts.config.treasury = new_treasury;
+
+        emit!(ConfigUpdated {
+            field: "treasury".to_string(),
+            old_val: old_treasury.to_string(),
+            new_val: new_treasury.to_string(),
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        Ok(())
+    }
+
+    pub fn deactivate_analyst(ctx: Context<AdminDeactivateAnalyst>, active: bool) -> Result<()> {
+        ctx.accounts.analyst.is_active = active;
+
+        emit!(AnalystDeactivated {
+            analyst: ctx.accounts.analyst.authority,
+            active,
+            timestamp: Clock::get()?.unix_timestamp,
+        });
+        Ok(())
+    }
+
     pub fn claim_winnings(ctx: Context<ClaimWinnings>) -> Result<()> {
         let prediction = &ctx.accounts.prediction;
         let bet = &mut ctx.accounts.bet;
@@ -824,6 +870,23 @@ pub struct AdminAction<'info> {
     pub admin: Signer<'info>,
 }
 
+#[derive(Accounts)]
+pub struct AdminDeactivateAnalyst<'info> {
+    #[account(
+        seeds = [b"config"],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, OracleConfig>,
+    #[account(
+        mut,
+        seeds = [b"analyst", analyst.authority.as_ref()],
+        bump = analyst.bump
+    )]
+    pub analyst: Account<'info, Analyst>,
+    #[account(constraint = admin.key() == config.admin @ OracleError::Unauthorized)]
+    pub admin: Signer<'info>,
+}
+
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, InitSpace)]
 pub enum AssetType {
     Cryptocurrency,
@@ -880,6 +943,21 @@ pub struct SentimentSubmitted {
     pub score: u8,
     pub confidence: u8,
     pub weighted_score: u8,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct ConfigUpdated {
+    pub field: String,
+    pub old_val: String,
+    pub new_val: String,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct AnalystDeactivated {
+    pub analyst: Pubkey,
+    pub active: bool,
     pub timestamp: i64,
 }
 

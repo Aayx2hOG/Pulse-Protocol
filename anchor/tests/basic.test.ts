@@ -260,4 +260,64 @@ describe('Sentiment Oracle', () => {
       assert.strictEqual(config.isPaused, false)
     })
   })
+
+  describe('Admin Functions', () => {
+    it('should update min stake', async () => {
+      const newMinStake = new anchor.BN(50_000_000);
+
+      const tx = await program.methods.updateMinStake(newMinStake).accountsPartial({
+        config: configPda
+      }).rpc();
+      console.log('update min stake to', tx);
+
+      const config = await program.account.oracleConfig.fetch(configPda);
+      assert.strictEqual(config.minStake.toNumber(), 50_000_000);
+    })
+
+    it('should update cooldown', async() => {
+      const newCooldown = new anchor.BN(30);
+
+      const tx = await program.methods.updateCooldown(newCooldown).accountsPartial({
+        config: configPda
+      }).rpc();
+      console.log('update cooldown to', tx);
+
+      const config = await program.account.oracleConfig.fetch(configPda);
+      assert.strictEqual(config.submissionCooldown.toNumber(), newCooldown.toNumber());
+    })
+
+    it('should update treasury', async () => {
+    const newTreasury = anchor.web3.Keypair.generate().publicKey
+    
+    const tx = await program.methods
+      .updateTreasury(newTreasury)
+      .accountsPartial({
+        config: configPda,
+      })
+      .rpc()
+      console.log('update treasury tx', tx)
+      const config = await program.account.oracleConfig.fetch(configPda)
+      assert.strictEqual(config.treasury.toBase58(), newTreasury.toBase58())
+    })
+
+    it('should deactivate analyst', async () => {
+      const tx = await program.methods
+        .deactivateAnalyst(false)
+        .accountsPartial({
+          config: configPda,
+          analyst: analystPda,
+        })
+        .rpc()
+      console.log('deactivate analyst tx', tx)
+      const analyst = await program.account.analyst.fetch(analystPda)
+      assert.strictEqual(analyst.isActive, false)
+      await program.methods
+        .deactivateAnalyst(true)
+        .accountsPartial({
+          config: configPda,
+          analyst: analystPda,
+        })
+        .rpc()
+    })
+  })
 })

@@ -277,6 +277,74 @@
       ]
     },
     {
+      "name": "deactivate_analyst",
+      "discriminator": [
+        64,
+        135,
+        65,
+        133,
+        35,
+        36,
+        99,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "analyst",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  110,
+                  97,
+                  108,
+                  121,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "analyst.authority",
+                "account": "Analyst"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "active",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "initialize",
       "discriminator": [
         175,
@@ -988,6 +1056,138 @@
           "type": "bool"
         }
       ]
+    },
+    {
+      "name": "update_cooldown",
+      "discriminator": [
+        77,
+        108,
+        158,
+        221,
+        67,
+        31,
+        120,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_cooldown",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_min_stake",
+      "discriminator": [
+        209,
+        210,
+        237,
+        163,
+        84,
+        150,
+        199,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_min_stake",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "update_treasury",
+      "discriminator": [
+        60,
+        16,
+        243,
+        66,
+        96,
+        59,
+        254,
+        131
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "new_treasury",
+          "type": "pubkey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1059,6 +1259,19 @@
   ],
   "events": [
     {
+      "name": "AnalystDeactivated",
+      "discriminator": [
+        90,
+        75,
+        108,
+        163,
+        100,
+        141,
+        58,
+        26
+      ]
+    },
+    {
       "name": "BetPlaced",
       "discriminator": [
         88,
@@ -1069,6 +1282,19 @@
         206,
         32,
         0
+      ]
+    },
+    {
+      "name": "ConfigUpdated",
+      "discriminator": [
+        40,
+        241,
+        230,
+        122,
+        11,
+        19,
+        198,
+        194
       ]
     },
     {
@@ -1319,6 +1545,26 @@
       }
     },
     {
+      "name": "AnalystDeactivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "analyst",
+            "type": "pubkey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "AssetType",
       "type": {
         "kind": "enum",
@@ -1400,6 +1646,30 @@
           {
             "name": "position",
             "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": "string"
+          },
+          {
+            "name": "old_val",
+            "type": "string"
+          },
+          {
+            "name": "new_val",
+            "type": "string"
           },
           {
             "name": "timestamp",

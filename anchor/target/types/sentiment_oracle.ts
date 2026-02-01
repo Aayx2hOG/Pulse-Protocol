@@ -283,6 +283,74 @@ export type SentimentOracle = {
       ]
     },
     {
+      "name": "deactivateAnalyst",
+      "discriminator": [
+        64,
+        135,
+        65,
+        133,
+        35,
+        36,
+        99,
+        213
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "analyst",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  97,
+                  110,
+                  97,
+                  108,
+                  121,
+                  115,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "analyst.authority",
+                "account": "analyst"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "active",
+          "type": "bool"
+        }
+      ]
+    },
+    {
       "name": "initialize",
       "discriminator": [
         175,
@@ -994,6 +1062,138 @@ export type SentimentOracle = {
           "type": "bool"
         }
       ]
+    },
+    {
+      "name": "updateCooldown",
+      "discriminator": [
+        77,
+        108,
+        158,
+        221,
+        67,
+        31,
+        120,
+        146
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "newCooldown",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updateMinStake",
+      "discriminator": [
+        209,
+        210,
+        237,
+        163,
+        84,
+        150,
+        199,
+        196
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "newMinStake",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "updateTreasury",
+      "discriminator": [
+        60,
+        16,
+        243,
+        66,
+        96,
+        59,
+        254,
+        131
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "newTreasury",
+          "type": "pubkey"
+        }
+      ]
     }
   ],
   "accounts": [
@@ -1065,6 +1265,19 @@ export type SentimentOracle = {
   ],
   "events": [
     {
+      "name": "analystDeactivated",
+      "discriminator": [
+        90,
+        75,
+        108,
+        163,
+        100,
+        141,
+        58,
+        26
+      ]
+    },
+    {
       "name": "betPlaced",
       "discriminator": [
         88,
@@ -1075,6 +1288,19 @@ export type SentimentOracle = {
         206,
         32,
         0
+      ]
+    },
+    {
+      "name": "configUpdated",
+      "discriminator": [
+        40,
+        241,
+        230,
+        122,
+        11,
+        19,
+        198,
+        194
       ]
     },
     {
@@ -1325,6 +1551,26 @@ export type SentimentOracle = {
       }
     },
     {
+      "name": "analystDeactivated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "analyst",
+            "type": "pubkey"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "assetType",
       "type": {
         "kind": "enum",
@@ -1406,6 +1652,30 @@ export type SentimentOracle = {
           {
             "name": "position",
             "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "configUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "field",
+            "type": "string"
+          },
+          {
+            "name": "oldVal",
+            "type": "string"
+          },
+          {
+            "name": "newVal",
+            "type": "string"
           },
           {
             "name": "timestamp",
