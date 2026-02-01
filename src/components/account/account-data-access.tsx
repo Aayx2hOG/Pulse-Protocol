@@ -12,6 +12,8 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTransactionToast } from '../use-transaction-toast'
+import { toast } from 'sonner'
 
 export function useGetBalance({ address }: { address: PublicKey }) {
   const { connection } = useConnection()
@@ -52,7 +54,7 @@ export function useGetTokenAccounts({ address }: { address: PublicKey }) {
 
 export function useTransferSol({ address }: { address: PublicKey }) {
   const { connection } = useConnection()
-  // const transactionToast = useTransactionToast()
+  const transactionToast = useTransactionToast()
   const wallet = useWallet()
   const client = useQueryClient()
 
@@ -84,9 +86,7 @@ export function useTransferSol({ address }: { address: PublicKey }) {
     },
     onSuccess: async (signature) => {
       if (signature) {
-        // TODO: Add back Toast
-        // transactionToast(signature)
-        console.log('Transaction sent', signature)
+        transactionToast(signature)
       }
       await Promise.all([
         client.invalidateQueries({
@@ -98,15 +98,16 @@ export function useTransferSol({ address }: { address: PublicKey }) {
       ])
     },
     onError: (error) => {
-      // TODO: Add Toast
-      console.error(`Transaction failed! ${error}`)
+      toast.error('Transaction failed', {
+        description: error instanceof Error ? error.message : String(error),
+      })
     },
   })
 }
 
 export function useRequestAirdrop({ address }: { address: PublicKey }) {
   const { connection } = useConnection()
-  // const transactionToast = useTransactionToast()
+  const transactionToast = useTransactionToast()
   const client = useQueryClient()
 
   return useMutation({
@@ -121,9 +122,9 @@ export function useRequestAirdrop({ address }: { address: PublicKey }) {
       return signature
     },
     onSuccess: async (signature) => {
-      // TODO: Add back Toast
-      // transactionToast(signature)
-      console.log('Airdrop sent', signature)
+      if (signature) {
+        transactionToast(signature)
+      }
       await Promise.all([
         client.invalidateQueries({
           queryKey: ['get-balance', { endpoint: connection.rpcEndpoint, address }],

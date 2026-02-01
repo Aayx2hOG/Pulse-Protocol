@@ -4,6 +4,7 @@ import { clusterApiUrl, Connection } from '@solana/web3.js'
 import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 import { createContext, ReactNode, useContext } from 'react'
+import { toast } from 'sonner'
 
 export interface SolanaCluster {
   name: string
@@ -80,7 +81,9 @@ export function ClusterProvider({ children }: { children: ReactNode }) {
         new Connection(cluster.endpoint)
         setClusters([...clusters, cluster])
       } catch (err) {
-        console.error(`${err}`)
+        toast.error('Invalid cluster endpoint', {
+          description: 'Failed to connect to the specified endpoint',
+        })
       }
     },
     deleteCluster: (cluster: SolanaCluster) => {

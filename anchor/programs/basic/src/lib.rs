@@ -83,7 +83,10 @@ pub mod sentiment_oracle {
         )?;
 
         let analyst = &mut ctx.accounts.analyst;
-        analyst.stake_amount = analyst.stake_amount.checked_add(amount).unwrap();
+        analyst.stake_amount = analyst
+            .stake_amount
+            .checked_add(amount)
+            .ok_or(OracleError::ArithmeticOverflow)?;
 
         emit!(StakeDeposited {
             analyst: analyst.authority,
@@ -103,7 +106,10 @@ pub mod sentiment_oracle {
             OracleError::InsufficientStake
         );
 
-        let remaining = analyst.stake_amount.checked_sub(amount).unwrap();
+        let remaining = analyst
+            .stake_amount
+            .checked_sub(amount)
+            .ok_or(OracleError::ArithmeticOverflow)?;
         require!(
             remaining == 0 || remaining >= config.min_stake,
             OracleError::InsufficientStake
@@ -163,7 +169,10 @@ pub mod sentiment_oracle {
         feed.is_active = true;
         feed.bump = ctx.bumps.sentiment_feed;
 
-        config.total_feeds = config.total_feeds.checked_add(1).unwrap();
+        config.total_feeds = config
+            .total_feeds
+            .checked_add(1)
+            .ok_or(OracleError::ArithmeticOverflow)?;
         Ok(())
     }
 
@@ -171,7 +180,7 @@ pub mod sentiment_oracle {
         ctx: Context<SubmitSentiment>,
         sentiment_score: u8,
         confidence: u8,
-        reasoning_hash: String,
+        _reasoning_hash: String,
         sources: Vec<String>,
     ) -> Result<()> {
         require!(sentiment_score <= 100, OracleError::InvalidScore);
@@ -212,15 +221,27 @@ pub mod sentiment_oracle {
 
         feed.sentiment_score = new_score;
         feed.confidence = ((feed.confidence as u16 + confidence as u16) / 2) as u8;
-        feed.data_points = feed.data_points.checked_add(1).unwrap();
+        feed.data_points = feed
+            .data_points
+            .checked_add(1)
+            .ok_or(OracleError::ArithmeticOverflow)?;
         feed.last_updated = clock.unix_timestamp;
 
         if sentiment_score > 60 {
-            feed.bullish_count = feed.bullish_count.checked_add(1).unwrap();
+            feed.bullish_count = feed
+                .bullish_count
+                .checked_add(1)
+                .ok_or(OracleError::ArithmeticOverflow)?;
         } else if sentiment_score < 40 {
-            feed.bearish_count = feed.bearish_count.checked_add(1).unwrap();
+            feed.bearish_count = feed
+                .bearish_count
+                .checked_add(1)
+                .ok_or(OracleError::ArithmeticOverflow)?;
         } else {
-            feed.neutral_count = feed.neutral_count.checked_add(1).unwrap();
+            feed.neutral_count = feed
+                .neutral_count
+                .checked_add(1)
+                .ok_or(OracleError::ArithmeticOverflow)?;
         }
 
         feed.trend = if new_score > old_score + 5 {
@@ -231,7 +252,10 @@ pub mod sentiment_oracle {
             Trend::Neutral
         };
 
-        analyst.total_predictions = analyst.total_predictions.checked_add(1).unwrap();
+        analyst.total_predictions = analyst
+            .total_predictions
+            .checked_add(1)
+            .ok_or(OracleError::ArithmeticOverflow)?;
         analyst.last_submission = clock.unix_timestamp;
 
         emit!(SentimentSubmitted {
@@ -276,7 +300,10 @@ pub mod sentiment_oracle {
         prediction.resolved_at = 0;
         prediction.bump = ctx.bumps.prediction;
 
-        config.total_predictions = config.total_predictions.checked_add(1).unwrap();
+        config.total_predictions = config
+            .total_predictions
+            .checked_add(1)
+            .ok_or(OracleError::ArithmeticOverflow)?;
 
         emit!(PredictionCreated {
             prediction_id: prediction.prediction_id.clone(),
@@ -291,7 +318,7 @@ pub mod sentiment_oracle {
 
     pub fn place_bet(ctx: Context<PlaceBet>, amount: u64, position: bool) -> Result<()> {
         let config = &ctx.accounts.config;
-        require!(!config.is_paused, OracleError::OraclePaused);
+        require!(!config.is_paused, OracleError::Paused);
 
         // Get prediction key before mutable borrow
         let prediction_key = ctx.accounts.prediction.key();
@@ -333,11 +360,20 @@ pub mod sentiment_oracle {
         bet.bump = ctx.bumps.bet;
 
         if position {
-            prediction.yes_stake = prediction.yes_stake.checked_add(amount).unwrap();
+            prediction.yes_stake = prediction
+                .yes_stake
+                .checked_add(amount)
+                .ok_or(OracleError::ArithmeticOverflow)?;
         } else {
-            prediction.no_stake = prediction.no_stake.checked_add(amount).unwrap();
+            prediction.no_stake = prediction
+                .no_stake
+                .checked_add(amount)
+                .ok_or(OracleError::ArithmeticOverflow)?;
         }
-        prediction.total_participants = prediction.total_participants.checked_add(1).unwrap();
+        prediction.total_participants = prediction
+            .total_participants
+            .checked_add(1)
+            .ok_or(OracleError::ArithmeticOverflow)?;
 
         emit!(BetPlaced {
             prediction_id,
@@ -421,7 +457,7 @@ pub mod sentiment_oracle {
                 let total_pool = prediction
                     .yes_stake
                     .checked_add(prediction.no_stake)
-                    .unwrap();
+                    .ok_or(OracleError::ArithmeticOverflow)?;
                 let winning_pool = if bet.position {
                     prediction.yes_stake
                 } else {
@@ -433,9 +469,9 @@ pub mod sentiment_oracle {
                 } else {
                     (bet.amount as u128)
                         .checked_mul(total_pool as u128)
-                        .unwrap()
+                        .ok_or(OracleError::ArithmeticOverflow)?
                         .checked_div(winning_pool as u128)
-                        .unwrap() as u64
+                        .ok_or(OracleError::ArithmeticOverflow)? as u64
                 }
             };
 
@@ -529,7 +565,10 @@ pub mod sentiment_oracle {
         let analyst = &mut ctx.accounts.analyst;
 
         if correct {
-            analyst.correct_predictions = analyst.correct_predictions.checked_add(1).unwrap();
+            analyst.correct_predictions = analyst
+                .correct_predictions
+                .checked_add(1)
+                .ok_or(OracleError::ArithmeticOverflow)?;
             analyst.reputation_score = std::cmp::min(1000, analyst.reputation_score + 10);
         } else {
             analyst.reputation_score = analyst.reputation_score.saturating_sub(20);
@@ -1040,10 +1079,10 @@ pub enum OracleError {
     DeadlineNotReached,
     #[msg("Invalid deadline")]
     InvalidDeadline,
-    #[msg("Oracle is paused")]
-    OraclePaused,
     #[msg("Bet already claimed")]
     AlreadyClaimed,
+    #[msg("Arithmetic Overflow")]
+    ArithmeticOverflow,
     #[msg("Prediction not yet resolved")]
     PredictionNotResolved,
     #[msg("Cooldown period not elapsed")]

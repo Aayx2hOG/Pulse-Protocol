@@ -1478,13 +1478,13 @@ export type SentimentOracle = {
     },
     {
       "code": 6016,
-      "name": "oraclePaused",
-      "msg": "Oracle is paused"
+      "name": "alreadyClaimed",
+      "msg": "Bet already claimed"
     },
     {
       "code": 6017,
-      "name": "alreadyClaimed",
-      "msg": "Bet already claimed"
+      "name": "arithmeticOverflow",
+      "msg": "Arithmetic Overflow"
     },
     {
       "code": 6018,

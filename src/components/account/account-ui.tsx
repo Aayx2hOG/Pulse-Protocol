@@ -5,6 +5,7 @@ import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js'
 import { RefreshCw } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 import { useCluster } from '../cluster/cluster-data-access'
 import { ExplorerLink } from '../cluster/cluster-ui'
@@ -53,7 +54,16 @@ export function AccountBalanceCheck({ address }: { address: PublicKey }) {
     return (
       <AppAlert
         action={
-          <Button variant="outline" onClick={() => mutation.mutateAsync(1).catch((err) => console.log(err))}>
+          <Button
+            variant="outline"
+            onClick={() =>
+              mutation.mutateAsync(1).catch((err) => {
+                toast.error('Airdrop failed', {
+                  description: err instanceof Error ? err.message : String(err),
+                })
+              })
+            }
+          >
             Request Airdrop
           </Button>
         }
@@ -268,7 +278,16 @@ function ModalAirdrop({ address }: { address: PublicKey }) {
       title="Airdrop"
       submitDisabled={!amount || mutation.isPending}
       submitLabel="Request Airdrop"
-      submit={() => mutation.mutateAsync(parseFloat(amount))}
+      submit={() => {
+        const parsedAmount = parseFloat(amount)
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+          toast.error('Invalid amount', {
+            description: 'Please enter a valid positive number',
+          })
+          return
+        }
+        mutation.mutateAsync(parsedAmount)
+      }}
     >
       <Label htmlFor="amount">Amount</Label>
       <Input
@@ -301,10 +320,28 @@ function ModalSend({ address }: { address: PublicKey }) {
       submitDisabled={!destination || !amount || mutation.isPending}
       submitLabel="Send"
       submit={() => {
-        mutation.mutateAsync({
-          destination: new PublicKey(destination),
-          amount: parseFloat(amount),
-        })
+        try {
+          // Validate destination address
+          const pubkey = new PublicKey(destination)
+
+          // Validate amount
+          const parsedAmount = parseFloat(amount)
+          if (isNaN(parsedAmount) || parsedAmount <= 0) {
+            toast.error('Invalid amount', {
+              description: 'Please enter a valid positive number',
+            })
+            return
+          }
+
+          mutation.mutateAsync({
+            destination: pubkey,
+            amount: parsedAmount,
+          })
+        } catch (error) {
+          toast.error('Invalid destination', {
+            description: 'Please enter a valid Solana address',
+          })
+        }
       }}
     >
       <Label htmlFor="destination">Destination</Label>

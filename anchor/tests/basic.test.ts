@@ -97,10 +97,7 @@ describe('Sentiment Oracle', () => {
 
   describe('Unstake Tokens', () => {
     it('should stake more then unstake tokens', async () => {
-      await program.methods
-        .stakeTokens(new anchor.BN(100_000_000))
-        .accountsPartial({ vault: vaultPda })
-        .rpc()
+      await program.methods.stakeTokens(new anchor.BN(100_000_000)).accountsPartial({ vault: vaultPda }).rpc()
 
       const analystBefore = await program.account.analyst.fetch(analystPda)
       const vaultBalanceBefore = await provider.connection.getBalance(vaultPda)
@@ -219,8 +216,9 @@ describe('Sentiment Oracle', () => {
         const vaultBalanceAfter = await provider.connection.getBalance(vaultPda)
         assert.ok(vaultBalanceBefore - vaultBalanceAfter > 0)
         console.log('Payout received:', (vaultBalanceBefore - vaultBalanceAfter) / LAMPORTS_PER_SOL, 'SOL')
-      } catch (error: any) {
-        console.error('Claim winnings error:', error.message)
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.error('Claim winnings error:', message)
         throw error
       }
     })
@@ -236,9 +234,10 @@ describe('Sentiment Oracle', () => {
           })
           .rpc()
         assert.fail('Should have thrown an error')
-      } catch (error: any) {
-        console.log('Expected error:', error.message)
-        assert.ok(error.message.includes('AlreadyClaimed') || error.message.includes('already'))
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.log('Expected error:', message)
+        assert.ok(message.includes('AlreadyClaimed') || message.includes('already'))
       }
     })
   })
@@ -263,38 +262,44 @@ describe('Sentiment Oracle', () => {
 
   describe('Admin Functions', () => {
     it('should update min stake', async () => {
-      const newMinStake = new anchor.BN(50_000_000);
+      const newMinStake = new anchor.BN(50_000_000)
 
-      const tx = await program.methods.updateMinStake(newMinStake).accountsPartial({
-        config: configPda
-      }).rpc();
-      console.log('update min stake to', tx);
+      const tx = await program.methods
+        .updateMinStake(newMinStake)
+        .accountsPartial({
+          config: configPda,
+        })
+        .rpc()
+      console.log('update min stake to', tx)
 
-      const config = await program.account.oracleConfig.fetch(configPda);
-      assert.strictEqual(config.minStake.toNumber(), 50_000_000);
+      const config = await program.account.oracleConfig.fetch(configPda)
+      assert.strictEqual(config.minStake.toNumber(), 50_000_000)
     })
 
-    it('should update cooldown', async() => {
-      const newCooldown = new anchor.BN(30);
+    it('should update cooldown', async () => {
+      const newCooldown = new anchor.BN(30)
 
-      const tx = await program.methods.updateCooldown(newCooldown).accountsPartial({
-        config: configPda
-      }).rpc();
-      console.log('update cooldown to', tx);
+      const tx = await program.methods
+        .updateCooldown(newCooldown)
+        .accountsPartial({
+          config: configPda,
+        })
+        .rpc()
+      console.log('update cooldown to', tx)
 
-      const config = await program.account.oracleConfig.fetch(configPda);
-      assert.strictEqual(config.submissionCooldown.toNumber(), newCooldown.toNumber());
+      const config = await program.account.oracleConfig.fetch(configPda)
+      assert.strictEqual(config.submissionCooldown.toNumber(), newCooldown.toNumber())
     })
 
     it('should update treasury', async () => {
-    const newTreasury = anchor.web3.Keypair.generate().publicKey
-    
-    const tx = await program.methods
-      .updateTreasury(newTreasury)
-      .accountsPartial({
-        config: configPda,
-      })
-      .rpc()
+      const newTreasury = anchor.web3.Keypair.generate().publicKey
+
+      const tx = await program.methods
+        .updateTreasury(newTreasury)
+        .accountsPartial({
+          config: configPda,
+        })
+        .rpc()
       console.log('update treasury tx', tx)
       const config = await program.account.oracleConfig.fetch(configPda)
       assert.strictEqual(config.treasury.toBase58(), newTreasury.toBase58())

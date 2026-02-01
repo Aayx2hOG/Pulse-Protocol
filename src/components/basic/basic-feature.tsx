@@ -3,22 +3,22 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import { ExplorerLink } from '../cluster/cluster-ui'
 import { WalletButton } from '../solana/solana-provider'
-import { useBasicProgram } from './basic-data-access'
-import { BasicCreate, BasicProgram } from './basic-ui'
+import { useSentimentOracleProgram } from './basic-data-access'
+import { AnalystRegistration, BasicProgram } from './basic-ui'
 import { AppHero } from '../app-hero'
 import { ellipsify } from '@/lib/utils'
 
 export default function BasicFeature() {
   const { publicKey } = useWallet()
-  const { programId } = useBasicProgram()
+  const { programId } = useSentimentOracleProgram()
 
   return publicKey ? (
     <div>
-      <AppHero title="Basic" subtitle={'Run the program by clicking the "Run program" button.'}>
+      <AppHero title="Sentiment Oracle" subtitle={'Register as an analyst and submit your predictions.'}>
         <p className="mb-6">
           <ExplorerLink path={`account/${programId}`} label={ellipsify(programId.toString())} />
         </p>
-        <BasicCreate />
+        <AnalystRegistration />
       </AppHero>
       <BasicProgram />
     </div>
